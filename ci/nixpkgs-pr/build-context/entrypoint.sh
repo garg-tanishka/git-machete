@@ -25,7 +25,11 @@ existing_version=$(grep 'version = \".*\";' $expression_path | cut -d '"' -f2)
 sed -i "s/version = \".*\";/version = \"$VERSION\";/" $expression_path
 sed -i "s/sha256 = \".*\";/sha256 = \"$tarball_sha256\";/" $expression_path
 
-nix-build -A gitAndTools.git-machete
+nix-build -A gitAndTools.git-machete || {
+  ls -l /nix/store/3v3ajxd7cv60h6j608x8xka017pzr9gd-git-machete-3.3.0/bin/ || true
+  sed -i 's/assertExecutable() {/& set -x; echo Hello for \$1; ls -l \$1 || true; id; /' /nix/store/8b9q1c34dxq8p72q71x77yh3hd924yn1-hook/nix-support/setup-hook
+  nix-build -A gitAndTools.git-machete
+}
 nix-env -f . -iA gitAndTools.git-machete
 installed_version=$(git machete --version)
 [[ ${installed_version/git-machete version /} = $VERSION ]]
